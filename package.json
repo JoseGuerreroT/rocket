@@ -1,0 +1,28 @@
+{
+  "name": "rocket",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agente de WhatsApp con IA para varios negocios. Fluver es el primer cliente.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env.local src/dev.ts",
+    "typecheck": "tsc --noEmit",
+    "simulate": "tsx --env-file-if-exists=.env.local scripts/simulate.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.133.0",
+    "@hono/node-server": "2.1.5",
+    "@upstash/redis": "1.39.0",
+    "@vercel/functions": "3.10.1",
+    "hono": "4.13.13",
+    "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
