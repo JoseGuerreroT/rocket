@@ -11,7 +11,7 @@ Cliente → Meta → POST /webhooks/whatsapp → (200 de inmediato)
                        ↓ en segundo plano
           firma ✓ → ¿mensaje repetido? → bandeja + candado por conversación
                        ↓
-          Claude (claude-opus-5-5) + MCP del negocio + escalar_a_humano
+          Claude (claude-sonnet-5-5) + MCP del negocio + escalar_a_humano
                        ↓
           respuesta por la Cloud API
 ```

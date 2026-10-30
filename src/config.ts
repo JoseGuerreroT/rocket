@@ -7,7 +7,8 @@ export const requireEnv = (name: string): string => {
 
 export const optionalEnv = (name: string): string | undefined => process.env[name] || undefined
 
-export const MODEL = 'claude-opus-5-5'
+// Sonnet: la mitad del precio de Opus (US$2 / US$10 por millón de tokens) y de sobra para un chat de ventas.
+export const MODEL = 'claude-sonnet-5-5'
 
 export const graphApiUrl = (path: string): string =>
     `https://graph.facebook.com/${optionalEnv('GRAPH_API_VERSION') ?? 'v23.0'}/${path}`

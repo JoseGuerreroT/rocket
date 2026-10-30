@@ -42,7 +42,7 @@ const callClaude = async (tenant: Tenant, phoneE164: string, messages: History):
         betas: ['mcp-client-2025-11-20', 'server-side-fallback-2026-07-01'],
         // Si el modelo se niega por un falso positivo de seguridad, la API reintenta con otro.
         fallbacks: 'default',
-        // Es un chat: respuestas cortas, poca deliberación. El default de este modelo es `medium`.
+        // Es un chat: respuestas cortas, poca deliberación. El default de este modelo es `high`.
         output_config: { effort: 'low' },
         cache_control: { type: 'ephemeral' },
         system: buildSystemPrompt(tenant),
