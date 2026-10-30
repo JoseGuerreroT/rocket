@@ -38,3 +38,6 @@ app.post('/webhooks/whatsapp', async (c) => {
     waitUntil(work)
     return c.text('ok')
 })
+
+/** Entrada para Vercel: su detección de Hono toma `src/app.ts` y usa el export por defecto. */
+export default app

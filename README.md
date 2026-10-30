@@ -26,8 +26,7 @@ Cliente → Meta → POST /webhooks/whatsapp → (200 de inmediato)
 
 ```
 src/
-  app.ts                 rutas Hono (verificación y webhook de Meta)
-  index.ts               entrada para Vercel
+  app.ts                 rutas Hono; su export por defecto es la entrada de Vercel
   dev.ts                 servidor local
   conversation.ts        repetidos, bandeja, candado y respuesta
   agent/                 Claude, prompt, token del MCP, escalar_a_humano
@@ -53,7 +52,7 @@ El conector MCP lo llama la API de Claude desde internet, así que `FLUVER_MCP_U
 
 ## Desplegar en Vercel
 
-1. Proyecto nuevo apuntando a este repo; Vercel detecta Hono por `src/index.ts`.
+1. Proyecto nuevo apuntando a este repo; Vercel detecta Hono por `src/app.ts` (export por defecto).
 2. Upstash Redis desde el Marketplace de Vercel, que crea `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
 3. Las demás variables de `.env.example`.
 4. En Meta: webhook `https://<dominio>/webhooks/whatsapp`, el mismo `WHATSAPP_VERIFY_TOKEN`, suscrito al campo `messages`.
