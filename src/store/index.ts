@@ -16,4 +16,7 @@ const createStore = (): Store => {
     return createMemoryStore()
 }
 
-export const store = createStore()
+let instance: Store | undefined
+
+/** Se crea al primer uso: si falta Upstash en Vercel, falla la petición con un mensaje claro, no el arranque. */
+export const getStore = (): Store => (instance ??= createStore())

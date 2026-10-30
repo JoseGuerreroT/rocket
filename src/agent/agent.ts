@@ -12,7 +12,10 @@ import { buildSystemPrompt, nowNote } from './prompt.js'
 const MAX_STEPS = 6
 const MCP_SERVER_NAME = 'negocio'
 
-const client = new Anthropic()
+let client: Anthropic | undefined
+
+/** Se crea al primer uso: sin ANTHROPIC_API_KEY el servidor arranca igual y el error sale en la petición. */
+const getClient = (): Anthropic => (client ??= new Anthropic())
 
 export type TurnInput = {
     tenant: Tenant
@@ -36,7 +39,7 @@ const textOf = (response: Response): string =>
         .trim()
 
 const callClaude = async (tenant: Tenant, phoneE164: string, messages: History): Promise<Response> =>
-    client.beta.messages.create({
+    getClient().beta.messages.create({
         model: MODEL,
         max_tokens: 16000,
         betas: ['mcp-client-2025-11-20', 'server-side-fallback-2026-07-01'],
