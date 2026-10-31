@@ -12,7 +12,10 @@ export type History = Anthropic.Beta.BetaMessageParam[]
 export type Store = {
     /** `true` la primera vez que se ve el mensaje. Meta reintenta los webhooks. */
     markSeen(messageId: string): Promise<boolean>
-    pushInbox(key: string, text: string): Promise<void>
+    /** Guarda el texto y lo marca como el último mensaje de la conversación. */
+    pushInbox(key: string, text: string, messageId: string): Promise<void>
+    /** Id del último mensaje que entró a la bandeja: decide quién responde tras la espera. */
+    lastInboxMessage(key: string): Promise<string | undefined>
     drainInbox(key: string): Promise<string[]>
     inboxSize(key: string): Promise<number>
     acquireLock(key: string): Promise<boolean>

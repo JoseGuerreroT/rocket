@@ -7,6 +7,14 @@ import type { Tenant } from './tenants/types.js'
 
 const conversationKey = (tenant: Tenant, waId: string) => `${tenant.id}:${waId}`
 
+/**
+ * En WhatsApp la gente parte una idea en varios mensajes seguidos. Se espera este tiempo
+ * desde el último antes de responder, para contestar todo junto y no una vez por mensaje.
+ */
+const QUIET_MS = 6000
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 /** Responde a lo acumulado en la bandeja. Si falla, el cliente recibe el contacto del equipo. */
 const answer = async (tenant: Tenant, waId: string, key: string, userText: string): Promise<void> => {
     try {
@@ -53,6 +61,9 @@ export const handleIncoming = async (message: IncomingMessage): Promise<void> =>
     }
 
     const key = conversationKey(tenant, message.from)
-    await getStore().pushInbox(key, message.text)
+    await getStore().pushInbox(key, message.text, message.id)
+    await sleep(QUIET_MS)
+    // Si llegó otro mensaje durante la espera, responde quien lo recibió.
+    if ((await getStore().lastInboxMessage(key)) !== message.id) return
     await processInbox(tenant, message.from, key)
 }

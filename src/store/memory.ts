@@ -22,9 +22,11 @@ export const createMemoryStore = (): Store => {
 
     return {
         markSeen: async (id) => setIfAbsent(`seen:${id}`, SEEN_TTL_S),
-        pushInbox: async (key, text) => {
+        pushInbox: async (key, text, messageId) => {
             inboxes.set(key, [...(inboxes.get(key) ?? []), text])
+            write(`last:${key}`, messageId, LOCK_TTL_S)
         },
+        lastInboxMessage: async (key) => read<string>(`last:${key}`),
         drainInbox: async (key) => {
             const texts = inboxes.get(key) ?? []
             inboxes.delete(key)

@@ -13,8 +13,6 @@ export type Tenant = {
     /** Cómo habla el bot de este negocio. Va después de las reglas fijas de la plataforma. */
     voice: string
     escalation: {
-        /** Número de WhatsApp del equipo, sin `+`, para el enlace `wa.me`. */
-        humanWhatsapp: string
         slackWebhookUrl?: string
     }
     replies: {

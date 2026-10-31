@@ -7,9 +7,14 @@ type InboxItem = { text: string }
 
 export const createUpstashStore = (redis: Redis): Store => ({
     markSeen: async (id) => (await redis.set(`seen:${id}`, 1, { nx: true, ex: SEEN_TTL_S })) === 'OK',
-    pushInbox: async (key, text) => {
-        await redis.rpush<InboxItem>(`inbox:${key}`, { text })
+    pushInbox: async (key, text, messageId) => {
+        await redis
+            .multi()
+            .rpush<InboxItem>(`inbox:${key}`, { text })
+            .set(`last:${key}`, { id: messageId }, { ex: LOCK_TTL_S })
+            .exec()
     },
+    lastInboxMessage: async (key) => (await redis.get<{ id: string }>(`last:${key}`))?.id,
     drainInbox: async (key) => {
         const [items] = await redis
             .multi()

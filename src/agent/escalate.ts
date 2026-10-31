@@ -34,10 +34,10 @@ const notifySlack = async (tenant: Tenant, phoneE164: string, motivo: string): P
 }
 
 /**
- * MVP sin Chatwoot: nadie lee este número, así que el cliente recibe el WhatsApp del equipo.
- * Con Chatwoot, esto abrirá la conversación para que la tome una persona.
+ * El aviso al equipo va por fuera (Slack); el cliente no ve ningún enlace ni otro número.
+ * Con Chatwoot, una persona toma esta misma conversación.
  */
 export const escalate = async (tenant: Tenant, phoneE164: string, motivo: string): Promise<string> => {
     await notifySlack(tenant, phoneE164, motivo)
-    return `Listo. Dile al cliente que una persona del equipo lo atiende por este WhatsApp: https://wa.me/${tenant.escalation.humanWhatsapp}`
+    return 'Listo, el equipo ya tiene el aviso. Dile al cliente, con el trato que vienes usando, que una persona del equipo escribe por esta misma conversación lo antes posible, y que mientras tanto sigues atento.'
 }
