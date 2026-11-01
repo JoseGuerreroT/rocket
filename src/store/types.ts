@@ -18,6 +18,12 @@ export type Store = {
     lastInboxMessage(key: string): Promise<string | undefined>
     drainInbox(key: string): Promise<string[]>
     inboxSize(key: string): Promise<number>
+    /**
+     * Lo que pasó mientras una persona atendía (sus mensajes y los del cliente). El bot no
+     * los vio; se le pasan como contexto cuando la conversación vuelve a él.
+     */
+    pushNote(key: string, text: string): Promise<void>
+    drainNotes(key: string): Promise<string[]>
     acquireLock(key: string): Promise<boolean>
     releaseLock(key: string): Promise<void>
     getHistory(key: string): Promise<History>

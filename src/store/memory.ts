@@ -33,6 +33,14 @@ export const createMemoryStore = (): Store => {
             return texts
         },
         inboxSize: async (key) => inboxes.get(key)?.length ?? 0,
+        pushNote: async (key, text) => {
+            inboxes.set(`notes:${key}`, [...(inboxes.get(`notes:${key}`) ?? []), text])
+        },
+        drainNotes: async (key) => {
+            const texts = inboxes.get(`notes:${key}`) ?? []
+            inboxes.delete(`notes:${key}`)
+            return texts
+        },
         acquireLock: async (key) => setIfAbsent(`lock:${key}`, LOCK_TTL_S),
         releaseLock: async (key) => {
             values.delete(`lock:${key}`)

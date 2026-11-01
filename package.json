@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env.local src/dev.ts",
+    "dev:chatwoot": "tsx watch --env-file-if-exists=.env.local --env-file-if-exists=dev/chatwoot/rocket.env src/dev.ts",
     "typecheck": "tsc --noEmit",
     "simulate": "tsx --env-file-if-exists=.env.local scripts/simulate.ts"
   },
