@@ -7,8 +7,9 @@ export const requireEnv = (name: string): string => {
 
 export const optionalEnv = (name: string): string | undefined => process.env[name] || undefined
 
-// Sonnet: la mitad del precio de Opus (US$2 / US$10 por millón de tokens) y de sobra para un chat de ventas.
-export const MODEL = 'claude-sonnet-5-5'
+// Haiku: 20 veces más barato que Sonnet (US$0,10 / US$0,50 por millón de tokens) y más rápido;
+// Anthropic lo recomienda para atención al cliente en vivo.
+export const MODEL = 'claude-haiku-5-5'
 
 export const graphApiUrl = (path: string): string =>
     `https://graph.facebook.com/${optionalEnv('GRAPH_API_VERSION') ?? 'v23.0'}/${path}`

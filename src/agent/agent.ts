@@ -44,11 +44,11 @@ const callClaude = async (tenant: Tenant, phoneE164: string, messages: History):
     getClient().beta.messages.create({
         model: MODEL,
         max_tokens: 16000,
-        betas: ['mcp-client-2025-11-20', 'server-side-fallback-2026-07-01', 'thinking-binding-controls-2026-08-01'],
-        // Si el modelo se niega por un falso positivo de seguridad, la API reintenta con otro.
-        fallbacks: 'default',
-        // Es un chat: respuestas cortas, poca deliberación. El default de este modelo es `high`.
-        output_config: { effort: 'low' },
+        // Haiku no tiene reintento con otro modelo si se niega: `runTurn` responde el error y escala.
+        betas: ['mcp-client-2025-11-20', 'thinking-binding-controls-2026-08-01'],
+        // `medium`, no `low`: con un prompt largo, en `low` Haiku se salta más búsquedas en el
+        // catálogo y a veces deja ver su razonamiento en la respuesta (guía de Anthropic).
+        output_config: { effort: 'medium' },
         // El razonamiento guardado queda atado al prompt que lo produjo. Al cambiar la voz del
         // negocio, el historial de 24 h tiene bloques de la versión anterior: se descartan en vez
         // de rechazar la petición entera.

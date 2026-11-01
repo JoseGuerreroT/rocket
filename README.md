@@ -15,7 +15,7 @@ Cliente → Meta → Chatwoot → POST /webhooks/chatwoot/<negocio>   (o Meta �
                                    ↓ 200 de inmediato; en segundo plano
           firma ✓ → ¿repetido? → espera 4 s para agrupar → candado por conversación
                                    ↓
-          Claude (claude-sonnet-5-5) + MCP del negocio + escalar_a_humano
+          Claude (claude-haiku-5-5) + MCP del negocio + escalar_a_humano
                                    ↓
           respuesta por la API de Chatwoot (o la Cloud API)
 ```
