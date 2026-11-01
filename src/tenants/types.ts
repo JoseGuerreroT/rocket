@@ -17,7 +17,10 @@ export type ChatwootConfig = {
 export type Tenant = {
     id: string
     name: string
-    /** Cloud API directo, sin bandeja. */
+    /**
+     * Cloud API de Meta. Sin Chatwoot, Meta le entrega a Rocket y Rocket responde por aquí.
+     * Con Chatwoot, solo se usa para el "escribiendo…" en el WhatsApp del cliente.
+     */
     whatsapp?: WhatsAppConfig
     /** Bandeja de Chatwoot: Meta le entrega a Chatwoot y Chatwoot al bot (Agent Bot). */
     chatwoot?: ChatwootConfig

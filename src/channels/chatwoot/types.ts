@@ -25,6 +25,8 @@ export type ChatwootWebhookPayload = {
     content?: string | null
     message_type?: 'incoming' | 'outgoing' | 'template' | 'activity'
     private?: boolean
+    /** En WhatsApp, el `wamid` del mensaje en Meta. */
+    source_id?: string | null
     sender?: ChatwootSender
     conversation?: ChatwootConversation
 }

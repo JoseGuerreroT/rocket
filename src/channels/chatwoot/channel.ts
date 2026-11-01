@@ -1,6 +1,7 @@
 import { notifyTeam } from '../../agent/notifyTeam.js'
 import type { ChatwootConfig, Tenant } from '../../tenants/types.js'
 import type { Channel } from '../types.js'
+import { markReadWithTyping } from '../whatsapp/send.js'
 
 import type { ChatwootConversation, ChatwootStatus } from './types.js'
 
@@ -39,18 +40,16 @@ export const createChatwootChannel = (
     tenant: Tenant,
     chatwoot: ChatwootConfig,
     conversation: ChatwootConversation,
-    phoneE164: string
+    phoneE164: string,
+    whatsappMessageId?: string
 ): ChatwootChannel => {
     const api = conversationApi(chatwoot, conversation.id)
     return {
         key: `${tenant.id}:${phoneE164.replace(/\D/g, '')}`,
         phoneE164,
+        // Chatwoot muestra "escribiendo" solo en su bandeja; en el WhatsApp del cliente lo pide Rocket a Meta.
         acknowledge: async () => {
-            try {
-                await api.post('/toggle_typing_status', { typing_status: 'on' })
-            } catch (error) {
-                console.warn('[rocket] No se pudo mostrar "escribiendo":', error)
-            }
+            if (tenant.whatsapp && whatsappMessageId) await markReadWithTyping(tenant.whatsapp, whatsappMessageId)
         },
         botOwnsConversation: async () => (await api.status()) === 'pending',
         sendText: async (text) => {

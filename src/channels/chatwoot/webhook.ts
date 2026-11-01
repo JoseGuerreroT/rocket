@@ -38,7 +38,7 @@ export const handleChatwootEvent = async (
         console.warn('[rocket] Conversación de Chatwoot sin teléfono:', conversation.id)
         return
     }
-    const channel = createChatwootChannel(tenant, chatwoot, conversation, phoneE164)
+    const channel = createChatwootChannel(tenant, chatwoot, conversation, phoneE164, payload.source_id ?? undefined)
     const text = payload.content?.trim() || undefined
 
     if (isFromClient(payload)) {

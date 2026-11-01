@@ -15,7 +15,7 @@ export type IncomingText = {
  * En WhatsApp la gente parte una idea en varios mensajes seguidos. Se espera este tiempo
  * desde el último antes de responder, para contestar todo junto y no una vez por mensaje.
  */
-const QUIET_MS = 6000
+const QUIET_MS = 4000
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 

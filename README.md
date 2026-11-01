@@ -13,7 +13,7 @@ El plan completo vive en fluver-web: `docs/whatsapp-bot/mvp.md` y `docs/whatsapp
 ```
 Cliente → Meta → Chatwoot → POST /webhooks/chatwoot/<negocio>   (o Meta → POST /webhooks/whatsapp)
                                    ↓ 200 de inmediato; en segundo plano
-          firma ✓ → ¿repetido? → espera 6 s para agrupar → candado por conversación
+          firma ✓ → ¿repetido? → espera 4 s para agrupar → candado por conversación
                                    ↓
           Claude (claude-sonnet-5-5) + MCP del negocio + escalar_a_humano
                                    ↓
@@ -69,7 +69,7 @@ El conector MCP lo llama la API de Claude desde internet, así que `FLUVER_MCP_U
 1. En Chatwoot: bandeja de WhatsApp Cloud con el número, el WABA id, el token y el App Secret de la app de Meta. En Meta, el webhook apunta a la URL que da esa bandeja.
 2. Ajustes → Bots → nuevo bot con URL `https://<rocket>/webhooks/chatwoot/fluver`. Copiar su token y su secreto a `FLUVER_CHATWOOT_BOT_TOKEN` y `FLUVER_CHATWOOT_WEBHOOK_SECRET`.
 3. En la bandeja → Bot: elegir ese bot. Las conversaciones nuevas entran en `pending` y las responde Rocket.
-4. Sin `FLUVER_WHATSAPP_PHONE_NUMBER_ID`: Rocket ya no recibe directo de Meta.
+4. `FLUVER_WHATSAPP_PHONE_NUMBER_ID` y `WHATSAPP_TOKEN` son opcionales: con ellos, Rocket muestra "escribiendo…" en el WhatsApp del cliente (Chatwoot solo lo muestra en su bandeja).
 
 ### Chatwoot local (para desarrollar)
 
