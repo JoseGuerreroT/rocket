@@ -1,8 +1,6 @@
 import { optionalEnv, requireEnv } from '../config.js'
 
-import type { Tenant } from './types.js'
-
-const HUMAN_WHATSAPP = '573025086995'
+import type { ChatwootConfig, Tenant, WhatsAppConfig } from './types.js'
 
 /** Borrador de `docs/whatsapp-bot/plan-tecnico-chatwoot.md` §3.5 en fluver-web. */
 const VOICE = `Eres el asistente de Fluver por WhatsApp. Fluver es una plataforma para reservar tours y traslados por mar en Santa Marta y el Parque Tayrona, con capitanes certificados. Hablas como alguien del muelle de Santa Marta: cercano, alegre y práctico. Nada de lenguaje corporativo.
@@ -35,13 +33,29 @@ Lo que no cambia con el tono
 - No digas que las embarcaciones tienen seguro ni prometas nada que no salga de las herramientas o de esta guía.
 - Ante una queja, un reembolso o algo que no puedas resolver: tono serio y empático, sin emojis, y usa escalar_a_humano. No le des otro número ni otro canal: una persona del equipo sigue esta misma conversación.`
 
+/** Directo con Meta solo si hay número configurado. Con Chatwoot, Meta le entrega a Chatwoot. */
+const whatsappConfig = (): WhatsAppConfig | undefined => {
+    const phoneNumberId = optionalEnv('FLUVER_WHATSAPP_PHONE_NUMBER_ID')
+    if (!phoneNumberId) return undefined
+    return { phoneNumberId, token: optionalEnv('WHATSAPP_TOKEN') }
+}
+
+const chatwootConfig = (): ChatwootConfig | undefined => {
+    const url = optionalEnv('FLUVER_CHATWOOT_URL')
+    if (!url) return undefined
+    return {
+        url: url.replace(/\/$/, ''),
+        accountId: requireEnv('FLUVER_CHATWOOT_ACCOUNT_ID'),
+        botToken: requireEnv('FLUVER_CHATWOOT_BOT_TOKEN'),
+        webhookSecret: requireEnv('FLUVER_CHATWOOT_WEBHOOK_SECRET')
+    }
+}
+
 export const getFluverTenant = (): Tenant => ({
     id: 'fluver',
     name: 'Fluver',
-    whatsapp: {
-        phoneNumberId: requireEnv('FLUVER_WHATSAPP_PHONE_NUMBER_ID'),
-        token: optionalEnv('WHATSAPP_TOKEN')
-    },
+    whatsapp: whatsappConfig(),
+    chatwoot: chatwootConfig(),
     mcp: {
         url: requireEnv('FLUVER_MCP_URL'),
         secret: requireEnv('FLUVER_MCP_SECRET')
@@ -52,6 +66,6 @@ export const getFluverTenant = (): Tenant => ({
     },
     replies: {
         onlyText: 'Por ahora solo leo mensajes de texto 🙏 Por escrito, con gusto ayudo.',
-        error: `Uy, hubo un problema al responder. Por aquí atiende una persona del equipo: https://wa.me/${HUMAN_WHATSAPP}`
+        error: 'Uy, hubo un problema al responder. Ya le avisé al equipo y una persona sigue por aquí.'
     }
 })

@@ -24,6 +24,17 @@ export const createUpstashStore = (redis: Redis): Store => ({
         return items.map((item) => item.text)
     },
     inboxSize: (key) => redis.llen(`inbox:${key}`),
+    pushNote: async (key, text) => {
+        await redis.multi().rpush<InboxItem>(`notes:${key}`, { text }).expire(`notes:${key}`, HISTORY_TTL_S).exec()
+    },
+    drainNotes: async (key) => {
+        const [items] = await redis
+            .multi()
+            .lrange<InboxItem>(`notes:${key}`, 0, -1)
+            .del(`notes:${key}`)
+            .exec<[InboxItem[], number]>()
+        return items.map((item) => item.text)
+    },
     acquireLock: async (key) => (await redis.set(`lock:${key}`, 1, { nx: true, ex: LOCK_TTL_S })) === 'OK',
     releaseLock: async (key) => {
         await redis.del(`lock:${key}`)

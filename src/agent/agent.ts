@@ -4,7 +4,7 @@ import { MODEL } from '../config.js'
 import type { History } from '../store/types.js'
 import type { Tenant } from '../tenants/types.js'
 
-import { ESCALATE_TOOL_NAME, escalate, escalateTool } from './escalate.js'
+import { ESCALATE_RESULT, ESCALATE_TOOL_NAME, escalateTool } from './escalate.js'
 import { signMcpToken } from './mcpToken.js'
 import { buildSystemPrompt, nowNote } from './prompt.js'
 
@@ -27,6 +27,8 @@ export type TurnInput = {
 export type TurnResult = {
     reply: string
     history: History
+    /** Motivo, si Claude pidió pasar la conversación a una persona. */
+    handoff?: string
 }
 
 type Response = Anthropic.Beta.BetaMessage
@@ -61,20 +63,20 @@ const callClaude = async (tenant: Tenant, phoneE164: string, messages: History):
         messages
     })
 
-/** Ejecuta las herramientas propias que pidió Claude (hoy, solo escalar) y arma los resultados. */
-const runOwnTools = async (tenant: Tenant, phoneE164: string, response: Response) => {
-    const calls = response.content.filter(
-        (block): block is Anthropic.Beta.BetaToolUseBlock => block.type === 'tool_use'
-    )
-    const results: Anthropic.Beta.BetaToolResultBlockParam[] = []
-    for (const call of calls) {
-        const motivo = String((call.input as { motivo?: unknown }).motivo ?? '')
-        const content = call.name === ESCALATE_TOOL_NAME
-            ? await escalate(tenant, phoneE164, motivo)
-            : `Herramienta desconocida: ${call.name}`
-        results.push({ type: 'tool_result', tool_use_id: call.id, content, is_error: call.name !== ESCALATE_TOOL_NAME })
-    }
-    return results
+const toolCalls = (response: Response) =>
+    response.content.filter((block): block is Anthropic.Beta.BetaToolUseBlock => block.type === 'tool_use')
+
+/** Herramientas propias que pidió Claude (hoy, solo escalar). Escalar solo se anota: lo ejecuta el canal. */
+const runOwnTools = (calls: Anthropic.Beta.BetaToolUseBlock[]): Anthropic.Beta.BetaToolResultBlockParam[] =>
+    calls.map((call) => {
+        const known = call.name === ESCALATE_TOOL_NAME
+        const content = known ? ESCALATE_RESULT : `Herramienta desconocida: ${call.name}`
+        return { type: 'tool_result', tool_use_id: call.id, content, is_error: !known }
+    })
+
+const escalationReason = (calls: Anthropic.Beta.BetaToolUseBlock[]): string | undefined => {
+    const call = calls.find((c) => c.name === ESCALATE_TOOL_NAME)
+    return call && String((call.input as { motivo?: unknown }).motivo ?? '')
 }
 
 /**
@@ -89,6 +91,7 @@ export const runTurn = async ({ tenant, phoneE164, history, userText }: TurnInpu
         { role: 'system', content: nowNote() }
     ]
     const replies: string[] = []
+    let handoff: string | undefined
 
     for (let step = 0; step < MAX_STEPS; step++) {
         const response = await callClaude(tenant, phoneE164, messages)
@@ -102,8 +105,10 @@ export const runTurn = async ({ tenant, phoneE164, history, userText }: TurnInpu
         if (response.stop_reason === 'pause_turn') continue
         if (response.stop_reason !== 'tool_use') break
 
-        messages.push({ role: 'user', content: await runOwnTools(tenant, phoneE164, response) })
+        const calls = toolCalls(response)
+        handoff ??= escalationReason(calls)
+        messages.push({ role: 'user', content: runOwnTools(calls) })
     }
 
-    return { reply: replies.join('\n\n') || tenant.replies.error, history: messages }
+    return { reply: replies.join('\n\n') || tenant.replies.error, history: messages, handoff }
 }
