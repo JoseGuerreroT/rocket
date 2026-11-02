@@ -25,12 +25,16 @@ const withNotes = (notes: string[], text: string): string =>
         ? `[Mientras una persona del equipo atendía esta conversación:\n${notes.join('\n')}]\n\n${text}`
         : text
 
-/** Responde a lo acumulado en la bandeja. Si falla, el cliente recibe un aviso y el chat pasa a una persona. */
+/**
+ * Responde a lo acumulado en la bandeja. Si falla, el cliente recibe un aviso y el chat pasa a una persona.
+ *
+ * Quién atiende se mira una sola vez, después de Claude y antes de enviar: el webhook ya filtró
+ * las conversaciones de una persona, y mirar también antes solo sumaba una consulta por mensaje.
+ */
 const answer = async (tenant: Tenant, channel: Channel, userText: string): Promise<void> => {
     try {
-        if (!(await channel.botOwnsConversation())) return
-        const history = await getStore().getHistory(channel.key)
         const notes = await getStore().drainNotes(channel.key)
+        const history = await getStore().getHistory(channel.key)
         const result = await runTurn({
             tenant,
             channelKind: channel.kind,
@@ -38,13 +42,18 @@ const answer = async (tenant: Tenant, channel: Channel, userText: string): Promi
             history,
             userText: withNotes(notes, userText)
         })
+        // Una persona tomó el chat mientras Claude pensaba: la respuesta no sale ni entra al
+        // historial (el cliente nunca la vio), y lo que escribió queda como contexto.
+        if (!(await channel.botOwnsConversation())) {
+            await getStore().restoreNotes(channel.key, [...notes, `Cliente: ${userText}`])
+            return
+        }
         await getStore().saveHistory(channel.key, result.history)
-        // Si una persona tomó el chat mientras Claude pensaba, la respuesta no sale.
-        if (!(await channel.botOwnsConversation())) return
         await channel.sendText(result.reply)
         if (result.handoff !== undefined) await channel.handoff(result.handoff)
     } catch (error) {
         console.error('[rocket] Error al responder:', error)
+        if (!(await channel.botOwnsConversation().catch(() => true))) return
         await channel.sendText(tenant.replies.error)
         await channel.handoff('El bot falló al responder; revisar la conversación.')
     }

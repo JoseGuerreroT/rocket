@@ -27,6 +27,12 @@ export const createUpstashStore = (redis: Redis): Store => ({
     pushNote: async (key, text) => {
         await redis.multi().rpush<InboxItem>(`notes:${key}`, { text }).expire(`notes:${key}`, HISTORY_TTL_S).exec()
     },
+    restoreNotes: async (key, texts) => {
+        if (!texts.length) return
+        // LPUSH mete cada uno al frente: al revés, quedan en su orden original.
+        const items = texts.map((text) => ({ text })).reverse()
+        await redis.multi().lpush<InboxItem>(`notes:${key}`, ...items).expire(`notes:${key}`, HISTORY_TTL_S).exec()
+    },
     drainNotes: async (key) => {
         const [items] = await redis
             .multi()

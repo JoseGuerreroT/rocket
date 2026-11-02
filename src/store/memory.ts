@@ -36,6 +36,9 @@ export const createMemoryStore = (): Store => {
         pushNote: async (key, text) => {
             inboxes.set(`notes:${key}`, [...(inboxes.get(`notes:${key}`) ?? []), text])
         },
+        restoreNotes: async (key, texts) => {
+            inboxes.set(`notes:${key}`, [...texts, ...(inboxes.get(`notes:${key}`) ?? [])])
+        },
         drainNotes: async (key) => {
             const texts = inboxes.get(`notes:${key}`) ?? []
             inboxes.delete(`notes:${key}`)

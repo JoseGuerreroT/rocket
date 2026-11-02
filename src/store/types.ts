@@ -24,6 +24,8 @@ export type Store = {
      */
     pushNote(key: string, text: string): Promise<void>
     drainNotes(key: string): Promise<string[]>
+    /** Devuelve al inicio, en orden, notas ya leídas que el bot al final no usó. */
+    restoreNotes(key: string, texts: string[]): Promise<void>
     acquireLock(key: string): Promise<boolean>
     releaseLock(key: string): Promise<void>
     getHistory(key: string): Promise<History>
