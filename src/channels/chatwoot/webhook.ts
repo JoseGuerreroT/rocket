@@ -3,7 +3,26 @@ import { getStore } from '../../store/index.js'
 import type { ChatwootConfig, Tenant } from '../../tenants/types.js'
 
 import { type ChatwootChannel, createChatwootChannel } from './channel.js'
-import type { ChatwootWebhookPayload } from './types.js'
+import type { ChatwootClient, ChatwootConversation, ChatwootWebhookPayload } from './types.js'
+
+const SOCIAL_NAMES = { messenger: 'Messenger', instagram: 'Instagram' } as const
+
+/**
+ * WhatsApp se reconoce por el teléfono. En la bandeja de Facebook (Messenger e Instagram) no
+ * hay teléfono: el cliente es su contacto de Chatwoot. Otras bandejas, por ahora, no.
+ */
+const clientOf = (conversation: ChatwootConversation): ChatwootClient | undefined => {
+    const sender = conversation.meta?.sender
+    if (conversation.channel === 'Channel::FacebookPage') {
+        if (!sender?.id) return undefined
+        const kind = conversation.additional_attributes?.type === 'instagram_direct_message' ? 'instagram' : 'messenger'
+        const name = sender.name || `contacto ${sender.id}`
+        return { kind, clientId: `chatwoot:${sender.id}`, keyId: `cw${sender.id}`, label: `${SOCIAL_NAMES[kind]} · ${name}` }
+    }
+    const phone = sender?.phone_number
+    if (!phone) return undefined
+    return { kind: 'whatsapp', clientId: phone, keyId: phone.replace(/\D/g, ''), label: phone }
+}
 
 /** `incoming` siempre es del cliente. Su `sender` no trae `type` (`Contact#webhook_data`). */
 const isFromClient = (payload: ChatwootWebhookPayload) => payload.message_type === 'incoming'
@@ -33,12 +52,13 @@ export const handleChatwootEvent = async (
     const { conversation } = payload
     if (payload.event !== 'message_created' || payload.private || !conversation) return
 
-    const phoneE164 = conversation.meta?.sender?.phone_number
-    if (!phoneE164) {
-        console.warn('[rocket] Conversación de Chatwoot sin teléfono:', conversation.id)
+    const client = clientOf(conversation)
+    if (!client) {
+        console.warn('[rocket] Conversación de Chatwoot sin cliente reconocible:', conversation.id, conversation.channel)
         return
     }
-    const channel = createChatwootChannel(tenant, chatwoot, conversation, phoneE164, payload.source_id ?? undefined)
+    const whatsappMessageId = client.kind === 'whatsapp' ? payload.source_id ?? undefined : undefined
+    const channel = createChatwootChannel(tenant, chatwoot, conversation, client, whatsappMessageId)
     const text = payload.content?.trim() || undefined
 
     if (isFromClient(payload)) {

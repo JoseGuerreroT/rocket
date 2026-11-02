@@ -1,12 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk'
 
+import type { ChannelKind } from '../channels/types.js'
 import { MODEL } from '../config.js'
 import type { History } from '../store/types.js'
 import type { Tenant } from '../tenants/types.js'
 
 import { ESCALATE_RESULT, ESCALATE_TOOL_NAME, escalateTool } from './escalate.js'
 import { signMcpToken } from './mcpToken.js'
-import { buildSystemPrompt, nowNote } from './prompt.js'
+import { buildSystemPrompt, turnNote } from './prompt.js'
 
 /** Vueltas máximas por mensaje del cliente: las herramientas del MCP no cuentan, corren dentro de una. */
 const MAX_STEPS = 6
@@ -19,7 +20,9 @@ const getClient = (): Anthropic => (client ??= new Anthropic())
 
 export type TurnInput = {
     tenant: Tenant
-    phoneE164: string
+    channelKind: ChannelKind
+    /** Ver `Channel.clientId`. */
+    clientId: string
     history: History
     userText: string
 }
@@ -40,7 +43,7 @@ const textOf = (response: Response): string =>
         .join('\n')
         .trim()
 
-const callClaude = async (tenant: Tenant, phoneE164: string, messages: History): Promise<Response> =>
+const callClaude = async (tenant: Tenant, clientId: string, messages: History): Promise<Response> =>
     getClient().beta.messages.create({
         model: MODEL,
         max_tokens: 16000,
@@ -60,7 +63,7 @@ const callClaude = async (tenant: Tenant, phoneE164: string, messages: History):
                 type: 'url',
                 url: tenant.mcp.url,
                 name: MCP_SERVER_NAME,
-                authorization_token: await signMcpToken(tenant, phoneE164)
+                authorization_token: await signMcpToken(tenant, clientId)
             }
         ],
         tools: [{ type: 'mcp_toolset', mcp_server_name: MCP_SERVER_NAME }, escalateTool],
@@ -88,17 +91,17 @@ const escalationReason = (calls: Anthropic.Beta.BetaToolUseBlock[]): string | un
  * negocio (lo llama la API directamente) y `escalar_a_humano` (lo corre Rocket). El historial
  * solo crece: se guarda el `content` completo de cada respuesta, razonamiento incluido.
  */
-export const runTurn = async ({ tenant, phoneE164, history, userText }: TurnInput): Promise<TurnResult> => {
+export const runTurn = async ({ tenant, channelKind, clientId, history, userText }: TurnInput): Promise<TurnResult> => {
     const messages: History = [
         ...history,
         { role: 'user', content: userText },
-        { role: 'system', content: nowNote() }
+        { role: 'system', content: turnNote(channelKind) }
     ]
     const replies: string[] = []
     let handoff: string | undefined
 
     for (let step = 0; step < MAX_STEPS; step++) {
-        const response = await callClaude(tenant, phoneE164, messages)
+        const response = await callClaude(tenant, clientId, messages)
         messages.push({ role: 'assistant', content: response.content })
 
         if (response.stop_reason === 'refusal') return { reply: tenant.replies.error, history: messages }

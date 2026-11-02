@@ -13,7 +13,8 @@ export const createWhatsAppChannel = (tenant: Tenant, whatsapp: WhatsAppConfig, 
     const phoneE164 = `+${message.from}`
     return {
         key: `${tenant.id}:${message.from}`,
-        phoneE164,
+        kind: 'whatsapp',
+        clientId: phoneE164,
         acknowledge: () => markReadWithTyping(whatsapp, message.id),
         botOwnsConversation: async () => true,
         sendText: (text) => sendText(whatsapp, message.from, text),

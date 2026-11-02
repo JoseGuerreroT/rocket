@@ -1,3 +1,4 @@
+import type { ChannelKind } from '../channels/types.js'
 import type { Tenant } from '../tenants/types.js'
 
 /**
@@ -12,12 +13,21 @@ const PLATFORM_RULES = `Reglas de la plataforma (no cambian con la voz del negoc
 
 export const buildSystemPrompt = (tenant: Tenant): string => `${PLATFORM_RULES}\n\n${tenant.voice}`
 
-/** La fecha va como mensaje de sistema al final, no en el prompt: así el prompt sigue en caché. */
-export const nowNote = (): string => {
+const CHANNEL_NAMES: Record<ChannelKind, string> = {
+    whatsapp: 'WhatsApp',
+    messenger: 'Facebook Messenger',
+    instagram: 'Instagram'
+}
+
+/**
+ * La fecha y el canal van como mensaje de sistema al final, no en el prompt: así el prompt
+ * sigue en caché y es el mismo para todos los canales.
+ */
+export const turnNote = (kind: ChannelKind): string => {
     const now = new Intl.DateTimeFormat('es-CO', {
         timeZone: 'America/Bogota',
         dateStyle: 'full',
         timeStyle: 'short'
     }).format(new Date())
-    return `Fecha y hora en Santa Marta: ${now}.`
+    return `Fecha y hora en Santa Marta: ${now}. Canal: ${CHANNEL_NAMES[kind]}.`
 }

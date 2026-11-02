@@ -33,7 +33,8 @@ const answer = async (tenant: Tenant, channel: Channel, userText: string): Promi
         const notes = await getStore().drainNotes(channel.key)
         const result = await runTurn({
             tenant,
-            phoneE164: channel.phoneE164,
+            channelKind: channel.kind,
+            clientId: channel.clientId,
             history,
             userText: withNotes(notes, userText)
         })

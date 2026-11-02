@@ -1,11 +1,15 @@
 import { notifyTeam } from '../../agent/notifyTeam.js'
 import type { ChatwootConfig, Tenant } from '../../tenants/types.js'
-import type { Channel } from '../types.js'
+import { splitMessage } from '../split.js'
+import type { Channel, ChannelKind } from '../types.js'
 import { markReadWithTyping } from '../whatsapp/send.js'
 
-import type { ChatwootConversation, ChatwootStatus } from './types.js'
+import type { ChatwootClient, ChatwootConversation, ChatwootStatus } from './types.js'
 
 const ESCALATED_LABEL = 'escalado'
+
+/** Lo que acepta cada red por mensaje (Chatwoot, "supported features"). WhatsApp: 4.096, de sobra. */
+const MAX_CHARS: Record<ChannelKind, number> = { whatsapp: 4096, messenger: 2000, instagram: 1000 }
 
 /** El token del Agent Bot solo puede ver la conversación, responder, cambiar estado y etiquetas. */
 const conversationApi = (chatwoot: ChatwootConfig, conversationId: number) => {
@@ -40,20 +44,23 @@ export const createChatwootChannel = (
     tenant: Tenant,
     chatwoot: ChatwootConfig,
     conversation: ChatwootConversation,
-    phoneE164: string,
+    client: ChatwootClient,
     whatsappMessageId?: string
 ): ChatwootChannel => {
     const api = conversationApi(chatwoot, conversation.id)
     return {
-        key: `${tenant.id}:${phoneE164.replace(/\D/g, '')}`,
-        phoneE164,
+        key: `${tenant.id}:${client.keyId}`,
+        kind: client.kind,
+        clientId: client.clientId,
         // Chatwoot muestra "escribiendo" solo en su bandeja; en el WhatsApp del cliente lo pide Rocket a Meta.
         acknowledge: async () => {
             if (tenant.whatsapp && whatsappMessageId) await markReadWithTyping(tenant.whatsapp, whatsappMessageId)
         },
         botOwnsConversation: async () => (await api.status()) === 'pending',
         sendText: async (text) => {
-            await api.post('/messages', { content: text, message_type: 'outgoing' })
+            for (const content of splitMessage(text, MAX_CHARS[client.kind])) {
+                await api.post('/messages', { content, message_type: 'outgoing' })
+            }
         },
         takeOver: async () => {
             await api.post('/toggle_status', { status: 'open' })
@@ -62,7 +69,7 @@ export const createChatwootChannel = (
             await api.post('/messages', { content: `🙋 El bot pasa la conversación: ${motivo}`, private: true })
             await api.post('/labels', { labels: [...new Set([...(conversation.labels ?? []), ESCALATED_LABEL])] })
             await api.post('/toggle_status', { status: 'open' })
-            await notifyTeam(tenant, phoneE164, motivo)
+            await notifyTeam(tenant, client.label, motivo)
         }
     }
 }
