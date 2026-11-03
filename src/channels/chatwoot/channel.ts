@@ -52,6 +52,7 @@ export const createChatwootChannel = (
         key: `${tenant.id}:${client.keyId}`,
         kind: client.kind,
         clientId: client.clientId,
+        clientName: client.name,
         // Chatwoot muestra "escribiendo" solo en su bandeja; en el WhatsApp del cliente lo pide Rocket a Meta.
         acknowledge: async () => {
             if (tenant.whatsapp && whatsappMessageId) await markReadWithTyping(tenant.whatsapp, whatsappMessageId)

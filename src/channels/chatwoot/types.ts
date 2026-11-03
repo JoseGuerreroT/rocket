@@ -36,6 +36,7 @@ export type ChatwootClient = {
     keyId: string
     /** Cómo lo reconoce el equipo en el aviso de Slack. */
     label: string
+    name?: string
 }
 
 export type ChatwootWebhookPayload = {

@@ -39,6 +39,7 @@ const answer = async (tenant: Tenant, channel: Channel, userText: string): Promi
             tenant,
             channelKind: channel.kind,
             clientId: channel.clientId,
+            clientName: channel.clientName,
             history,
             userText: withNotes(notes, userText)
         })

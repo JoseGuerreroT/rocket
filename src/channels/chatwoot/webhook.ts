@@ -17,11 +17,11 @@ const clientOf = (conversation: ChatwootConversation): ChatwootClient | undefine
         if (!sender?.id) return undefined
         const kind = conversation.additional_attributes?.type === 'instagram_direct_message' ? 'instagram' : 'messenger'
         const name = sender.name || `contacto ${sender.id}`
-        return { kind, clientId: `chatwoot:${sender.id}`, keyId: `cw${sender.id}`, label: `${SOCIAL_NAMES[kind]} · ${name}` }
+        return { kind, clientId: `chatwoot:${sender.id}`, keyId: `cw${sender.id}`, label: `${SOCIAL_NAMES[kind]} · ${name}`, name: sender.name || undefined }
     }
     const phone = sender?.phone_number
     if (!phone) return undefined
-    return { kind: 'whatsapp', clientId: phone, keyId: phone.replace(/\D/g, ''), label: phone }
+    return { kind: 'whatsapp', clientId: phone, keyId: phone.replace(/\D/g, ''), label: phone, name: sender?.name || undefined }
 }
 
 /** `incoming` siempre es del cliente. Su `sender` no trae `type` (`Contact#webhook_data`). */

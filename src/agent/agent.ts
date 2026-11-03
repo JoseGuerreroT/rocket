@@ -23,6 +23,7 @@ export type TurnInput = {
     channelKind: ChannelKind
     /** Ver `Channel.clientId`. */
     clientId: string
+    clientName?: string
     history: History
     userText: string
 }
@@ -91,11 +92,11 @@ const escalationReason = (calls: Anthropic.Beta.BetaToolUseBlock[]): string | un
  * negocio (lo llama la API directamente) y `escalar_a_humano` (lo corre Rocket). El historial
  * solo crece: se guarda el `content` completo de cada respuesta, razonamiento incluido.
  */
-export const runTurn = async ({ tenant, channelKind, clientId, history, userText }: TurnInput): Promise<TurnResult> => {
+export const runTurn = async ({ tenant, channelKind, clientId, clientName, history, userText }: TurnInput): Promise<TurnResult> => {
     const messages: History = [
         ...history,
         { role: 'user', content: userText },
-        { role: 'system', content: turnNote(channelKind) }
+        { role: 'system', content: turnNote(channelKind, clientName) }
     ]
     const replies: string[] = []
     let handoff: string | undefined

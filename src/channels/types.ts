@@ -14,6 +14,8 @@ export type Channel = {
      * que el MCP solo deja consultar, no reservar.
      */
     clientId: string
+    /** Nombre del perfil (WhatsApp, Instagram, Facebook), tal como lo puso el cliente. Puede no ser un nombre. */
+    clientName?: string
     /** Marca el mensaje como leído o muestra "escribiendo…". No es crítico. */
     acknowledge(): Promise<void>
     /** `false` si una persona del equipo tomó la conversación: el bot no responde. */

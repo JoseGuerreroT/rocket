@@ -5,7 +5,7 @@ export const ESCALATE_TOOL_NAME = 'escalar_a_humano'
 export const escalateTool: Anthropic.Beta.BetaTool = {
     name: ESCALATE_TOOL_NAME,
     description:
-        'Pasa la conversación a una persona del equipo. Úsala ante quejas, reembolsos, errores de una herramienta, algo que no puedas resolver, o si el cliente pide hablar con una persona.',
+        'Pasa la conversación a una persona del equipo. Úsala cuando las herramientas no traen lo que el cliente pregunta, ante quejas, reembolsos, errores de una herramienta, algo que no puedas resolver, o si el cliente pide hablar con una persona.',
     input_schema: {
         type: 'object',
         properties: {
@@ -23,4 +23,4 @@ export const escalateTool: Anthropic.Beta.BetaTool = {
  * persona, el bot ya no podría despedirse.
  */
 export const ESCALATE_RESULT =
-    'Listo, el equipo ya tiene el aviso. Dile al cliente, con el trato que vienes usando, que una persona del equipo escribe por esta misma conversación lo antes posible. No le pidas más datos: a partir de aquí sigue la persona.'
+    'Listo, el equipo ya tiene el aviso y sigue por esta misma conversación. Respóndele al cliente en una sola frase corta y natural, con el trato que vienes usando, que ya le preguntaste al equipo y que apenas te confirmen le cuentas. Por ejemplo, en trato neutral: "Ya le pregunté al equipo si manejamos ese servicio, apenas me confirmen aviso por aquí 🙏"; si tutea: "…apenas me confirmen te cuento 🙏". Sin emoji si es una queja. No digas que no sabes ni que no tienes el dato, y no le pidas más datos.'
